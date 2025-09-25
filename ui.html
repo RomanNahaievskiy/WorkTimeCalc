@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Victor+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <title>KLR-BUS terminal</title>
+    <title>WorkTimeCalc</title>
    
   <body>
     <style>
@@ -22,10 +22,10 @@ body {
     padding: 10px;
     flex-direction: column;
     justify-content: space-around;
-    background: auto;
+    background: #f7f7f7 url("https://media.istockphoto.com/id/1181253058/uk/%D1%84%D0%BE%D1%82%D0%BE/%D0%B4%D1%96%D0%BB%D0%BE%D0%B2%D1%96-%D0%BB%D1%8E%D0%B4%D0%B8.jpg?s=1024x1024&w=is&k=20&c=11JpyVPycogNAwHnUY4TcD-A79C_4KkwpPbvB9aLMsE=") 0 0/cover no-repeat ;
     color: #fff7f0;
     min-width: 100%;
-    min-height: auto;
+    min-height: 100vh;
     font-family: "Victor Mono";
     position: relative;
 
@@ -34,17 +34,20 @@ body {
 
 :root {
     --klr-palette-primary-main-color: #cf2f2a;
+    --modal-background-ok: linear-gradient(56deg, rgba(0, 0, 0, 1) 0%, rgba(35, 35, 47, 1) 50%);
 
 }
 
 form {
+    position: relative;
+    margin: 0 auto;
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 30px;
     justify-content: space-between;
     background-color: #23232f;
-    width: 100%;
+    min-width: 70%;
     height: auto;
     padding: 6%;
     border-radius: 12px;
@@ -56,7 +59,7 @@ form::after {
     content: "";
     display: block;
     position: absolute;
-    bottom: -10px;
+    bottom: -20px;
     left: 10%;
     width: 80%;
     height: 10px;
@@ -108,6 +111,47 @@ form::after {
     justify-content: space-between;
 }
 
+#modal {
+  position: absolute;
+  top: 0;left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #141414a7;
+  z-index: 50;
+  overflow: hidden;
+  visibility: hidden; 
+  opacity: 0;
+  transition: all 0.3s ease 0s;
+}
+#modal.active {
+  visibility: visible;
+  opacity: 1;
+  z-index: 50;
+  transition: all 0.3s ease 0s;
+}
+#modal div{
+  position: absolute;
+  display: flex;
+  gap: 24px;
+  flex-direction: column;
+  padding: 50px;
+  top: calc(50% - 100px);
+  left: calc(50% - 250px);
+  width: 500px;
+  min-height: 200px;
+  border-radius: 5px;
+  /* background: #cf2f2a; */
+  box-shadow: 0 0 600px 3px #cf2f2a;
+  
+}
+
+#modal[data-color='ok'] div {
+  background: #000;
+}
+#modal[data-color='err'] div {
+  background: var(--klr-palette-primary-main-color);
+}
+
 #input-cnt {
     min-height: 58px;
     min-width: 100%;
@@ -153,6 +197,7 @@ button {
     color: #fff7f0;
     background-color: #23232f;
     border: 1px solid #77777777;
+    
 }
 
 button[type="reset"] {
@@ -402,7 +447,10 @@ button:disabled::after {
             <p><span class="logo-subtitle">Terminal</span></p>
         </div>
         <div id="content-cnt">
-
+            <div id="modal">
+              <div> <p>Warning something wrong!</p>
+              <button id="ok-btn">ОК</button></div>
+            </div>
             <input id="input-cnt" type="text" name="employeId" placeholder="Скануйте Ваш код" autocomplete="off" required minlength="1"></input>
             <div id="shift-type-cnt">
                 <h3>Оберіть тип реєстрації робочого часу</h3>
@@ -423,7 +471,7 @@ button:disabled::after {
             </div>
                 
             
-            <div id="message-cnt">... </div>
+            <div hidden id="message-cnt"></div>
             <div id="btns-cnt">
             <button id="submit-btn" type="submit" >Підтвердити</button>
             <button id="reset-btn" type="reset">Очистити</button>
@@ -432,117 +480,124 @@ button:disabled::after {
     </form>
   
     <script >
+      
+    
       document.addEventListener("DOMContentLoaded", function () {
-        
-  const AppDOM = {};
-  AppDOM.formEl = document.getElementById("form");
-  AppDOM.startRadioBtnEl = document.getElementById("start-btn");
-  AppDOM.endRadioBtnEl = document.getElementById("end-btn");
-  AppDOM.inputCntEl = document.getElementById("input-cnt");
-  AppDOM.submitBtnEl = document.getElementById("submit-btn");
-  AppDOM.resetBtnEl = document.getElementById("reset-btn");
-  AppDOM.radioButtonsEl = document.querySelectorAll('input[type="radio"]');
-  AppDOM.messageCntEl = document.getElementById("message-cnt");
+              
+        const AppDOM = {};
+        AppDOM.formEl = document.getElementById("form");
+        AppDOM.startRadioBtnEl = document.getElementById("start-btn");
+        AppDOM.endRadioBtnEl = document.getElementById("end-btn");
+        AppDOM.inputCntEl = document.getElementById("input-cnt");
+        AppDOM.submitBtnEl = document.getElementById("submit-btn");
+        AppDOM.resetBtnEl = document.getElementById("reset-btn");
+        AppDOM.radioButtonsEl = document.querySelectorAll('input[type="radio"]');
+        AppDOM.messageCntEl = document.getElementById("message-cnt");
 
-  let employeId;
-  let shiftType;
+        let employeId;
+        let shiftType;
+        // Модальне вікно
+        function showModal(message = 'Йой, щось пішло не так...', bool) {
+        const modal = document.getElementById('modal');
+        bool ? modal.dataset.color = "ok" : modal.dataset.color = "err";
+        const messageBox = document.querySelector('#modal div p');
+        const okBtn = document.getElementById('ok-btn');
+        messageBox.textContent = `${message}`;
+        // console.log(messageBox);
+        modal.classList.add('active');
+        okBtn.addEventListener("click", hideModal)
 
-  // Очищення форми
-  function clearInput(input) {
-    input.value = ""; // Очищаємо значення поля
-    shiftType = undefined;
-    employeId = undefined; 
-    AppDOM.radioButtonsEl.forEach(el=> el.removeAttribute("disabled"));
-  }
+      }
+      function hideModal() {
+        const modal = document.getElementById('modal');
+        modal.classList.remove('active');
+        resetForm();
+      }
 
-  AppDOM.inputCntEl.focus();
-  
-  // Отримання значень із рядка вводу коду
-  AppDOM.inputCntEl.addEventListener("change", function (e) {
-    if (e.target.value) {
-      employeId = document.querySelector('input[name="employeId"]').value; // get ID from input
-    }
-  });
-  
 
-  AppDOM.radioButtonsEl.forEach((el)=>{
-    el.addEventListener("change", function(e){
-    shiftType = e.target.value;
-
-  })
-  })
-  AppDOM.formEl.addEventListener("submit", function (event) {
-    
-    event.preventDefault();
-    
-
-    AppDOM.submitBtnEl.setAttribute("disabled", true);
-    AppDOM.radioButtonsEl.forEach(el=> el.setAttribute("disabled", true));
-    AppDOM.inputCntEl.dataset.state = "checking";
-    AppDOM.submitBtnEl.textContent = "Перевірка...";
-    // Виклик функції порівняння даних та (якщо є збіг) надсилання
-    google.script.run
-      .withSuccessHandler((result) => {
-        console.log(result);
-        
-        AppDOM.messageCntEl.textContent = result.message;
-        AppDOM.messageCntEl.style.color = result.isValid ? "#f5f5f5" : "yellow";
-
-        if (result.isValid) {
-          const name = result.name;
-          google.script.run.writeShiftData(shiftType, employeId, name);
-         
-          AppDOM.submitBtnEl.textContent = "Підтвердити";
-          AppDOM.inputCntEl.removeAttribute("data-state");
-
-          setTimeout(() => {
-            AppDOM.messageCntEl.textContent = "...";
-            AppDOM.submitBtnEl.removeAttribute("disabled");
-           
-          }, 3000); // Початок анімації через 3 секунди
-          clearInput(AppDOM.inputCntEl);
-          
-          AppDOM.inputCntEl.focus();
-          employeId = undefined;
-          
-          isSubmiting = false;
-        } else if (!result.isValid) {
-          setTimeout(() => {
-            AppDOM.messageCntEl.textContent = "...";
-          }, 4000); // Початок анімації через 3 секунди
-        
-          if (result.message !== "Дані не знайдено в БД.") {
-            console.log(!result.message === "Дані не знайдено в БД.");
-           
-          } else {
-            AppDOM.inputCntEl.focus();
-            clearInput(AppDOM.inputCntEl);
-          }
-          AppDOM.inputCntEl.removeAttribute("data-state");
-               
-          isSubmiting = false;
+        // Очищення форми
+        function resetForm() {
+          AppDOM.messageCntEl.textContent = "";
+          shiftType = undefined;
+          employeId = undefined; 
           AppDOM.submitBtnEl.removeAttribute("disabled");
-          AppDOM.submitBtnEl.textContent = "Підтвердити";
+          AppDOM.radioButtonsEl.forEach(el=> el.removeAttribute("disabled"));
+          AppDOM.formEl.reset();
+          AppDOM.inputCntEl.focus();
         }
-      })
-      .withFailureHandler((error) => {
-        alert("Помилка: " + error.message);
-        isSubmiting = false;
-        AppDOM.submitBtnEl.removeAttribute("disabled");
-        AppDOM.submitBtnEl.textContent = "Підтвердити";
-      })
-      .compareData(employeId, shiftType);
-   
-  
-  });
-  AppDOM.formEl.addEventListener("reset", function (event) {
-    
-    clearInput(AppDOM.inputCntEl);
-    AppDOM.messageCntEl.textContent = "...";
-    AppDOM.inputCntEl.focus();
-    console.log(shiftType, employeId)
-  });
-});
+        // перший автофокус
+        AppDOM.inputCntEl.focus();
+        
+        // Отримання значень із рядка вводу коду
+        AppDOM.inputCntEl.addEventListener("change", function (e) {
+          if (e.target.value) {
+            employeId = document.querySelector('input[name="employeId"]').value; // get ID from input
+          }
+        });
+        
+        // Отримання даних із радіокнопок
+        AppDOM.radioButtonsEl.forEach((el)=>{
+          el.addEventListener("change", function(e){
+          shiftType = e.target.value;
+          })
+        })
+        // Відправка форми
+        //========================================================================================================================================================
+        
+        // Коли DOM завантажено:
+        AppDOM.formEl.addEventListener("submit", function (event) {
+        
+          event.preventDefault();
+          // Блокуємо кнопку відправки також радіокнопки
+
+          AppDOM.submitBtnEl.setAttribute("disabled", true);
+          AppDOM.radioButtonsEl.forEach(el=> el.setAttribute("disabled", true));
+          AppDOM.inputCntEl.dataset.state = "checking";
+          AppDOM.submitBtnEl.textContent = "Перевірка...";
+          // Виклик функції порівняння даних та (якщо є збіг) надсилання
+          google.script.run
+            .withSuccessHandler((result) => {
+              console.log(result);
+              
+              AppDOM.messageCntEl.textContent = result.message;
+              AppDOM.messageCntEl.style.color = result.isValid ? "#f5f5f5" : "yellow";
+
+              if (result.isValid) {
+                const name = result.name;
+                google.script.run.writeShiftData(shiftType, employeId, name);
+              
+                AppDOM.submitBtnEl.textContent = "Підтвердити";
+                AppDOM.inputCntEl.removeAttribute("data-state");
+                showModal(result.message, result.isValid);
+              
+              } else if (!result.isValid) {
+                showModal(result.message, result.isValid);
+                AppDOM.inputCntEl.removeAttribute("data-state");
+                // AppDOM.submitBtnEl.removeAttribute("disabled");
+                AppDOM.submitBtnEl.textContent = "Підтвердити";
+              }
+            })
+            .withFailureHandler((error) => {
+              alert("Помилка: " + error.message);
+              
+              AppDOM.submitBtnEl.removeAttribute("disabled");
+              AppDOM.submitBtnEl.textContent = "Підтвердити";
+              resetForm();
+            
+            })
+            .compareData(employeId, shiftType);
+        
+        
+        });
+        AppDOM.formEl.addEventListener("reset", function (event) {
+          
+          resetForm();
+          
+          
+          
+          // console.log(shiftType, employeId)
+        });
+      });
     </script>
   </body>
 </html>

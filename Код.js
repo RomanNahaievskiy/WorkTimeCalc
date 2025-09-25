@@ -1,19 +1,23 @@
 // запуск інтерфейсу
 function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile("ui") // ім'я твого HTML-файлу в проекті
+  return HtmlService.createHtmlOutputFromFile("ui") // ім'я HTML-файлу в проекті
     .setTitle("Облік робочого часу")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 // Визначення ід цільових таблиць
-let dbId = '1-JG_W71qHXcuq6h8Ur7nZpNZVRJBlf9XqHMxNoM1wuM'
-let wlId = '1-EAVYT9PiEq-BKL_BrikRANynPewdo6mDxKBtKvgx1o'
+let dbId = "1-JG_W71qHXcuq6h8Ur7nZpNZVRJBlf9XqHMcensored"; // Довідник працівників
+let wlId = "1-EAVYT9PiEq-BKL_BrikRANynPewdo6mDxKcensored"; // Журнал обліку
 
+// Назви Аркушів повинні відповідати Створеним таблицям
 function getEmployees() {
-  return SpreadsheetApp.openById(dbId).getSheetByName("db1").getDataRange().getValues();
+  return SpreadsheetApp.openById(dbId)
+    .getSheetByName("Аркуш1")
+    .getDataRange()
+    .getValues();
 }
 
 function getJournal() {
-  return SpreadsheetApp.openById(wlId).getSheetByName("Журнал обліку та відвідування");
+  return SpreadsheetApp.openById(wlId).getSheetByName("Аркуш1");
 }
 
 // ======================== Допоміжні функції (час) ======================= //
@@ -349,11 +353,14 @@ function compareData(employeId, shiftType) {
 // =========================== VALIDATION ONSHIFT ======================================//
 
 // Отримуємо дані з журналу таблиці
-function onShift(employeId = 'id123', shiftType) {
+function onShift(employeId, shiftType) {
   let id = employeId;
   let journalEntry;
   // отримуємо доступ до журналу -- Налаштувати!!!
-  const logger = getJournal().getDataRange().getValues().filter((row) => row.some((cell) => cell !== ""));
+  const logger = getJournal()
+    .getDataRange()
+    .getValues()
+    .filter((row) => row.some((cell) => cell !== ""));
 
   // Пошук в журналі з кінця до першого збігу
   function findJournalEntry(logger, id) {
@@ -377,7 +384,7 @@ function onShift(employeId = 'id123', shiftType) {
   }
 
   journalEntry = findJournalEntry(logger, id);
-  Logger.log(journalEntry)
+  Logger.log(journalEntry);
   return journalEntry;
 }
 // =========================== ФОРМА АВТОРИЗАЦІЇ ПРАЦІВНИКА  =========================== //

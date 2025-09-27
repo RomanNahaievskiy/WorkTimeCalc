@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Victor+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <title>WorkTimeCalc</title>
+    <title>KLR-BUS terminal</title>
    
   <body>
     <style>
@@ -22,7 +22,7 @@ body {
     padding: 10px;
     flex-direction: column;
     justify-content: space-around;
-    background: #f7f7f7 url("https://media.istockphoto.com/id/1181253058/uk/%D1%84%D0%BE%D1%82%D0%BE/%D0%B4%D1%96%D0%BB%D0%BE%D0%B2%D1%96-%D0%BB%D1%8E%D0%B4%D0%B8.jpg?s=1024x1024&w=is&k=20&c=11JpyVPycogNAwHnUY4TcD-A79C_4KkwpPbvB9aLMsE=") 0 0/cover no-repeat ;
+    background: #f7f7f7 ;
     color: #fff7f0;
     min-width: 100%;
     min-height: 100vh;
@@ -548,6 +548,7 @@ button:disabled::after {
         AppDOM.formEl.addEventListener("submit", function (event) {
         
           event.preventDefault();
+          // console.log(shiftType, employeId)
           // Блокуємо кнопку відправки також радіокнопки
 
           AppDOM.submitBtnEl.setAttribute("disabled", true);
@@ -596,6 +597,16 @@ button:disabled::after {
           
           
           // console.log(shiftType, employeId)
+        });
+        // patch 00.1
+        //========================================================================================================================================================
+        
+        document.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            // console.log('перехоплено подію ентер фокус спрямовано на радіокнопки')
+            AppDOM.radioButtonsEl[0].focus();
+          }
         });
       });
     </script>
